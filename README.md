@@ -2,6 +2,11 @@
 
 **[![icon](icon.svg)](https://github.com/0xshaikh/ignordr)** A local, offline debugger and auditor for `.gitignore` files.
 
+[![ci](https://github.com/0xshaikh/ignordr/actions/workflows/ci.yml/badge.svg)](https://github.com/0xshaikh/ignordr/actions/workflows/ci.yml)
+[![docs](https://github.com/0xshaikh/ignordr/actions/workflows/pages.yml/badge.svg)](https://0xshaikh.github.io/ignordr/)
+[![python](https://img.shields.io/badge/python-3.9%2B-blueviolet)](https://www.python.org/)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 `git check-ignore` answers one question: *"is this one path ignored?"* You usually have the opposite problem — you wrote twelve rules over three years, `!important.log` quietly stopped working, half of them are duplicates, and you want to know *why* something ended up in git.
 
 `ignordr` re-implements git's ignore semantics from scratch (no `git` subprocess, no network), then adds the diagnostics git doesn't have.
@@ -36,6 +41,9 @@ Each of those has bitten someone in production. `ignordr` names which one you hi
 | `fix` | Propose a deduplicated rewrite as a diff; `--apply` to write |
 
 Everything except `scan`/`audit` is read-only and needs no git repository at all. `--json` on every command for machine output.
+
+> There is an interactive cheatsheet with a browser playground that runs the
+> same decision logic: <https://0xshaikh.github.io/ignordr/>
 
 ## Examples
 
