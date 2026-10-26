@@ -39,10 +39,22 @@ jobs:
         shell: bash
         run: |
           set -eu
-          before=$(find . -type f -not -path './.git/*' -not -path '*/__pycache__/*' -not -path './.pytest_cache/*' | sort | md5sum)
+          # Portable hash (md5sum/sha1sum are not present on windows runners).
+          hash_tree() {
+            find . -type f \
+              -not -path './.git/*' \
+              -not -path '*/__pycache__/*' \
+              -not -path './.pytest_cache/*' \
+              -not -name '*.pyc' \
+              -not -path './build/*' -not -path './dist/*' \
+              | sort | xargs sha256sum
+          }
+          before=$(hash_tree)
           ignordr audit --repo . || true
           ignordr lint --repo . || true
           ignordr scan --repo . || true
           ignordr fix --repo . || true
-          after=$(find . -type f -not -path './.git/*' -not -path '*/__pycache__/*' -not -path './.pytest_cache/*' | sort | md5sum)
-          test "$before" = "$after"
+          ignordr tracked --repo . || true
+          ignordr check --repo . README.md || true
+          after=$(hash_tree)
+          test "$before" = "$after" && echo "read-only: unchanged"

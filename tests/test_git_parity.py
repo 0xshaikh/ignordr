@@ -36,13 +36,21 @@ def _make_repo(tmp_path: Path, gitignore: str, subdirs=None) -> Path:
     return repo
 
 
-def _git_ignored(repo: Path, rel: str) -> bool:
-    """True when real git considers *rel* ignored."""
-    # The path must exist on disk for `git check-ignore` to evaluate it.
+def _git_ignored(repo: Path, rel: str):
+    """True when real git considers *rel* ignored.
+
+    Returns None when the OS cannot even create a file with the requested name.
+    Windows rejects ``*``, ``?`` and ``[`` in filenames, so git itself cannot be
+    asked about such a path there -- those cases are genuinely untestable on
+    that platform, and the honest answer is to skip.
+    """
     full = repo / rel
     if not full.exists():
-        full.parent.mkdir(parents=True, exist_ok=True)
-        full.write_text("", encoding="utf-8")
+        try:
+            full.parent.mkdir(parents=True, exist_ok=True)
+            full.write_text("", encoding="utf-8")
+        except OSError:
+            return None
     proc = subprocess.run(
         ["git", "check-ignore", "-q", rel],
         cwd=repo,
@@ -85,7 +93,13 @@ CASES = [
 @pytest.mark.parametrize("gitignore,rel,expected", CASES)
 def test_matches_real_git(tmp_path, gitignore, rel, expected):
     repo = _make_repo(tmp_path, gitignore)
-    assert _git_ignored(repo, rel) is expected, "sanity: git disagrees with the table"
+    truth = _git_ignored(repo, rel)
+    if truth is None:
+        pytest.skip(
+            f"this platform cannot create a file named {rel!r}, "
+            "so git cannot be asked about it"
+        )
+    assert truth is expected, "sanity: git disagrees with the table"
     mine = check_path(str(repo), rel).ignored
     assert mine is expected, (
         f"ignordr disagrees with git on {rel!r} with {gitignore!r}: "
