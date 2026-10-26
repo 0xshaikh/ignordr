@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ignordr"
+version = "0.1.0"
+description = "Debug, audit and explain .gitignore files locally. No deps, no network."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "0xshaikh" }]
+requires-python = ">=3.9"
+keywords = ["git", "gitignore", "cli", "debugging", "lint", "devtools"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+ignordr = "ignordr.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/0xshaikh/ignordr"
+Repository = "https://github.com/0xshaikh/ignordr"
+Documentation = "https://0xshaikh.github.io/ignordr/"
+"Bug Tracker" = "https://github.com/0xshaikh/ignordr/issues"
+
+[tool.setuptools]
+packages = ["ignordr"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

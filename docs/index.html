@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ignordr — why did git decide that?</title>
+<meta name="description" content="A local, offline debugger and auditor for .gitignore files. Interactive cheatsheet and live examples.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root{
+  --bg:#0b1220; --panel:#0f172a; --panel2:#111c30; --line:#1e293b;
+  --fg:#e2e8f0; --muted:#94a3b8; --dim:#64748b;
+  --green:#34d399; --blue:#0ea5e9; --amber:#fbbf24; --red:#f87171;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:64px 24px 40px;max-width:960px;margin:0 auto}
+h1{font-size:44px;margin:0 0 8px;letter-spacing:-.02em;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:19px;max-width:640px}
+code,kbd{font-family:var(--mono)}
+a{color:var(--blue)}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px 80px}
+section{margin:56px 0}
+h2{font-size:26px;margin:0 0 14px;letter-spacing:-.01em}
+h3{font-size:17px;margin:26px 0 10px;color:var(--green)}
+p{color:#cbd5e1}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.tcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;transition:border-color .15s,transform .15s}
+.tcard:hover{border-color:#334155;transform:translateY(-2px)}
+.tcard b{display:block;font-size:15px;margin-bottom:6px}
+.tcard span{color:var(--muted);font-size:14px}
+pre{background:#070d18;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  overflow:auto;font-size:13.5px;line-height:1.6;margin:14px 0}
+pre code{color:#e2e8f0}
+.cmd{display:flex;align-items:baseline;gap:8px;background:#070d18;border:1px solid var(--line);
+  border-radius:12px;padding:12px 16px;margin:10px 0;font-family:var(--mono);font-size:14px}
+.cmd i{color:var(--green);font-style:normal}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+code{background:#070d18;border:1px solid var(--line);border-radius:5px;padding:1.5px 6px;font-size:13.5px}
+pre code{background:none;border:none;padding:0;font-size:13.5px}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-family:var(--mono)}
+.t-err{background:#3f1d1d;color:var(--red)}
+.t-warn{background:#3a2f12;color:var(--amber)}
+.t-info{background:#12293a;color:var(--blue)}
+/* playground */
+.lab{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.lab{grid-template-columns:1fr}}
+textarea,input{width:100%;background:#070d18;color:var(--fg);border:1px solid var(--line);
+  border-radius:10px;padding:12px;font-family:var(--mono);font-size:13.5px;resize:vertical}
+textarea:focus,input:focus{outline:none;border-color:var(--blue)}
+button{background:linear-gradient(90deg,var(--green),var(--blue));color:#04121c;border:none;
+  border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+button:hover{filter:brightness(1.08)}
+label{font-size:13px;color:var(--muted);display:block;margin:12px 0 6px}
+.res{background:#070d18;border:1px solid var(--line);border-radius:10px;padding:14px;
+  font-family:var(--mono);font-size:13.5px;max-height:420px;overflow:auto;white-space:pre-wrap}
+.ig{color:var(--red)}.ni{color:var(--green)}.rule{color:var(--amber)}
+footer{border-top:1px solid var(--line);margin-top:70px;padding-top:24px;color:var(--dim);font-size:13.5px}
+.badge{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:99px;padding:5px 13px;font-size:13px;color:var(--muted);margin-right:8px;margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>ignordr</h1>
+  <p class="sub">A local, offline debugger and auditor for <code>.gitignore</code>.
+     It explains <em>why</em> git decided the way it did — because last match wins,
+     directories get pruned, and tracked files ignore you entirely.</p>
+  <div>
+    <span class="badge">no dependencies</span>
+    <span class="badge">no network</span>
+    <span class="badge">read-only by default</span>
+    <span class="badge">Python 3.9+</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section id="start">
+  <h2>Start</h2>
+  <div class="cmd"><i>$</i><span>pip install ignordr</span></div>
+  <div class="cmd"><i>$</i><span>ignordr explain logs/important.log</span></div>
+  <p>Start with <code>explain</code>. It names the exact file and line that decided a path's fate,
+     and tells you precisely why a rule you wrote did not work.</p>
+</section>
+
+<section id="why">
+  <h2>Why <code>.gitignore</code> is hard</h2>
+  <p>Every one of these is true, and all of them bite people:</p>
+  <div class="grid">
+    <div class="tcard"><b><code>*.log</code> matches everywhere</b>
+      <span>At every depth: <code>a.log</code>, <code>src/a.log</code>, <code>a/b/c/a.log</code>.
+      <code>/app.log</code> matches only the root.</span></div>
+    <div class="tcard"><b>Last match wins</b>
+      <span><code>*.log</code> then <code>!x.log</code> keeps it. Reverse the order and it's gone.
+      Not first-match, not most-specific — last.</span></div>
+    <div class="tcard"><b>Pruned directories are sealed</b>
+      <span><code>build</code> then <code>!build/keep.log</code> does nothing. git never
+      descends into a directory it excluded as a directory.</span></div>
+    <div class="tcard"><b>Tracked files ignore you</b>
+      <span>A committed file is not ignored no matter what you write. A fresh clone or
+      <code>git clean -fdx</code> will behave differently from your tree.</span></div>
+    <div class="tcard"><b><code>**</code> is picky</b>
+      <span>Crosses <code>/</code> only as a standalone component. <code>a/**/z</code> crosses;
+      <code>a**z</code> behaves like <code>a*z</code>.</span></div>
+    <div class="tcard"><b>git stays quiet</b>
+      <span><code>git check-ignore -v</code> shows one rule for one path. It never explains
+      the other eleven rules you actually care about.</span></div>
+  </div>
+</section>
+
+<section id="play">
+  <h2>Try it — playground</h2>
+  <p>Edit the rules, edit the paths, and see the decision trail for each one.
+     This runs the same last-match-wins logic <code>ignordr</code> uses, in your browser.</p>
+  <div class="lab">
+    <div>
+      <label for="rules">.gitignore</label>
+      <textarea id="rules" spellcheck="false" rows="11"># build artifacts
+build
+dist/
+node_modules/
+
+*.log
+!important.log
+logs/*.log
+*.tmp
+
+# duplicated
+build</textarea>
+      <label for="paths">Paths to test (one per line)</label>
+      <textarea id="paths" spellcheck="false" rows="6">important.log
+logs/important.log
+logs/app.log
+build/out.js
+keep.tmp
+src/keep.tmp
+debug.txt</textarea>
+      <button id="run" style="margin-top:14px">Explain</button>
+    </div>
+    <div>
+      <label>Results</label>
+      <div class="res" id="out"></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <h2>Commands</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>explain PATH...</code></td><td>Trace a path through every rule; report the deciding file and line, and why</td></tr>
+    <tr><td><code>audit</code></td><td>Full audit: pattern problems plus tracked files an ignore rule matches</td></tr>
+    <tr><td><code>lint</code></td><td>Statically check patterns only — no file scan, fast, CI-safe</td></tr>
+    <tr><td><code>tracked</code></td><td>List tracked files an ignore rule would now exclude</td></tr>
+    <tr><td><code>scan</code></td><td>Walk the tree, mark every file ignored / not, name the rule</td></tr>
+    <tr><td><code>check PATH...</code></td><td>One-line yes/no; exit-code driven for scripts</td></tr>
+    <tr><td><code>fix</code></td><td>Propose a deduplicated rewrite as a diff; <code>--apply</code> to write</td></tr>
+  </table>
+  <p><code>--json</code> on every command for machine output. Exit codes:
+     <code>0</code> clean, <code>1</code> findings, <code>2</code> usage error.</p>
+</section>
+
+<section id="examples">
+  <h2>Examples</h2>
+
+  <h3>The rule that won</h3>
+  <pre><code>$ ignordr explain important.log
+important.log  -&gt;  NOT IGNORED  (file)
+
+  decided re-included by !important.log
+  at .gitignore:7
+
+        - NEGATION - carves an exception out of an earlier exclusion
+        - UNANCHORED - matches by basename at ANY depth below the tree</code></pre>
+
+  <h3>Why your exception is dead</h3>
+  <pre><code>$ ignordr explain logs/important.log
+logs/important.log  -&gt;  IGNORED  (file)
+
+  decided excluded by logs/*.log
+  at .gitignore:8
+
+  Pattern evaluation order (last match wins):
+      no  'build'                   scope (repo root)
+      match  '*.log'                scope (repo root)
+      match  '!important.log'       scope (repo root)
+      match  'logs/*.log'           scope (repo root)
+
+  WHY IT IS STUCK: your exception '!important.log' in .gitignore:7
+  matched, but it is overridden by a later rule.
+  '  'logs/*.log' in .gitignore:8 comes after
+   ' it, and git gives the LAST matching pattern the decision.
+   ' Your exception is dead.
+
+  FIX: move the negation below the exclusion it should override:
+        *.log
+        logs/*.log
+        !important.log</code></pre>
+  <p><code>!important.log</code> <em>did</em> match. The failure is pure ordering, and
+     git has no way to tell you that.</p>
+
+  <h3>Audit a repository</h3>
+  <pre><code>$ ignordr audit
+  0 error, 4 warning, 1 info, 9 untracked file(s) ignored
+
+[BROAD_RULE]      broad rule '*.tmp' matches by basename at every depth  @.gitignore:9
+                 -&gt; anchor it (e.g. /*.tmp or a/**) if you only meant the root
+[TRACKED_IGNORED] tracked file matches an ignore rule; git keeps it anyway (a.log)
+                 -&gt; run: git rm --cached a.log
+[DUPLICATE]       duplicate rule 'build' also appears in .gitignore:2  @.gitignore:12
+                 -&gt; delete the earlier copy (line 2 of .gitignore)</code></pre>
+</section>
+
+<section id="codes">
+  <h2>Finding codes</h2>
+  <table>
+    <tr><th>Code</th><th>Severity</th><th>Meaning</th></tr>
+    <tr><td><code>DUPLICATE</code></td><td><span class="tag t-warn">warning</span></td><td>Same pattern twice in one file; the earlier copy is dead</td></tr>
+    <tr><td><code>DEAD_NEGATION</code></td><td><span class="tag t-warn">warning</span></td><td>A negation cannot override the exclusion it answers</td></tr>
+    <tr><td><code>BROAD_RULE</code></td><td><span class="tag t-warn">warning</span></td><td>An unanchored basename rule matches at every depth</td></tr>
+    <tr><td><code>SELF_EXCLUDE</code></td><td><span class="tag t-warn">warning</span></td><td>A rule matches its own ignore file's directory</td></tr>
+    <tr><td><code>TRACKED_IGNORED</code></td><td><span class="tag t-warn">warning</span></td><td>Tracked file matches an ignore rule; git keeps it anyway</td></tr>
+  </table>
+</section>
+
+<section id="semantics">
+  <h2>Semantics model</h2>
+  <div class="card">
+    <p style="margin-top:0">The engine re-implements git's documented behaviour rather than
+    shelling out to git, so it runs offline and can emit diagnostics git cannot.</p>
+    <table>
+      <tr><th>Construct</th><th>Behaviour</th></tr>
+      <tr><td>leading <code>/</code></td><td>Anchors to the declaring file's directory; not part of the match</td></tr>
+      <tr><td><code>/</code> anywhere else</td><td>Anchors too</td></tr>
+      <tr><td>trailing <code>/</code></td><td>Does <em>not</em> anchor; restricts to directories</td></tr>
+      <tr><td>leading <code>**</code></td><td>Un-anchors the whole pattern: <code>**/a/b</code> ≈ <code>a/b</code> at any depth</td></tr>
+      <tr><td><code>**</code> mid-pattern</td><td>Crosses <code>/</code> only as a standalone component</td></tr>
+      <tr><td><code>*</code>, <code>?</code></td><td>Never cross <code>/</code> (<code>FNM_PATHNAME</code>)</td></tr>
+      <tr><td><code>[!abc]</code></td><td>POSIX class negation</td></tr>
+      <tr><td><code>\!</code>, <code>\#</code></td><td>Literal <code>!</code> / <code>#</code>, not a comment or negation</td></tr>
+      <tr><td><code>[abc</code>, trailing <code>\</code></td><td>Malformed — never matches</td></tr>
+      <tr><td>precedence</td><td>File depth, then line number. Last match wins.</td></tr>
+      <tr><td>pruning</td><td>A directory excluded as a directory is never descended into; nested negations are unreachable</td></tr>
+    </table>
+  </div>
+  <p>The differential tests build real repositories, run the real
+     <code>git check-ignore</code>, and compare verdicts. They are the correctness proof.</p>
+</section>
+
+<footer>
+  <p><strong>ignordr</strong> — local, offline, read-only by default. MIT license.
+     <a href="https://github.com/0xshaikh/ignordr">github.com/0xshaikh/ignordr</a></p>
+</footer>
+
+</div>
+
+<script>
+// Faithful-enough port of ignordr's engine for the playground: glob -> regex,
+// anchored detection, directory pruning, last-match-wins.
+const COMPS = "(?:[^/]+/)*";
+
+function isDirOnly(raw){ return raw.endsWith("/"); }
+
+function isAnchored(pat){
+  let b = pat.replace(/\/$/, "");
+  if (b.startsWith("**")) return false;
+  return b.includes("/");
+}
+
+function globToRegex(pat){
+  let body = pat.replace(/\/$/, "");
+  if (body.startsWith("/")) body = body.slice(1);
+  let out = "", i = 0, n = body.length, never = false;
+  while (i < n){
+    const c = body[i];
+    if (c === "\\"){
+      if (i + 1 >= n){ never = true; break; }
+      out += esc(body[i+1]); i += 2; continue;
+    }
+    if (c === "*"){
+      if (body.slice(i, i+2) === "**"){
+        const nx = body[i+2];
+        if (nx === "/"){ out += COMPS; i += 3; continue; }
+        if (i + 2 === n){ out += COMPS + "[^/]*"; i += 2; continue; }
+        if (i === 0){ out += COMPS + "[^/]*"; i += 2; continue; }
+        out += "[^/]*"; i += 2; continue;
+      }
+      out += "[^/]*"; i++; continue;
+    }
+    if (c === "?"){ out += "[^/]"; i++; continue; }
+    if (c === "["){
+      let j = i + 1;
+      while (j < n && body[j] !== "]"){ j += (body[j] === "\\") ? 2 : 1; }
+      if (j >= n){ out += "(?:)"; never = true; break; }
+      if (body[i+1] === "!"){ out += "[^"; i = j + 1; }
+      else { out += "["; i = j + 1; }
+      continue;
+    }
+    out += esc(c); i++;
+  }
+  let r = out;
+  if (!isAnchored(pat)){
+    if (r.startsWith(COMPS)) r = r.slice(COMPS.length);
+    r = "(?:^|.*/)?" + r;
+  }
+  if (never) r += "(?=.)";
+  return new RegExp(r + "$");
+}
+
+function esc(ch){ return ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+function parseRules(text){
+  const rules = [];
+  text.split("\n").forEach((line, idx) => {
+    let l = line.trim();
+    if (!l) return;
+    if (l[0] === "\\") l = l.slice(1);
+    if (l.startsWith("#")) return;
+    rules.push({ raw: line, text: l, negated: l.startsWith("!"), line: idx + 1 });
+  });
+  return rules;
+}
+
+// directory-pruning model: an excluded ancestor dir seals its subtree
+function nearestPruned(path, rules){
+  const parts = path.split("/");
+  for (let d = parts.length - 1; d >= 1; d--){
+    const anc = parts.slice(0, d).join("/");
+    for (const r of rules){
+      if (r.negated) continue;
+      if (r.text.includes("/") && !isAnchored(r.text)) continue;
+      const rx = globToRegex(r.raw.replace(/^!/, ""));
+      const bare = r.text.replace(/\/$/, "");
+      if (bare !== anc && !rx.test(anc)) continue;
+      // a rule with no trailing '/' still prunes (git treats 'build' as a dir
+      // once the path below it is being considered)
+      return r;
+    }
+  }
+  return null;
+}
+
+function explain(path, rules){
+  const stripped = path.split("/").filter(Boolean).join("/");
+  const hits = [];
+  for (const r of rules){
+    const body = r.text.replace(/^!/, "");
+    const rx = globToRegex(body);
+    hits.push({ r, matched: rx.test(stripped) });
+  }
+  const pruner = nearestPruned(stripped, rules);
+  if (pruner){
+    return { ignored: true, by: pruner, trail: hits,
+      note: "parent_excluded: git never descends into " + JSON.stringify(pruner.text) };
+  }
+  const winner = hits.filter(h => h.matched).pop();
+  if (!winner) return { ignored: false, by: null, trail: hits };
+  return { ignored: !winner.r.negated, by: winner.r, trail: hits };
+}
+
+function render(){
+  const rules = parseRules(document.getElementById("rules").value);
+  const paths = document.getElementById("paths").value.split("\n").map(s => s.trim()).filter(Boolean);
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  if (!paths.length){ out.textContent = "(add at least one path)"; return; }
+  paths.forEach(path => {
+    const v = explain(path, rules);
+    const div = document.createElement("div");
+    div.style.marginBottom = "16px";
+    const cls = v.ignored ? "ig" : "ni";
+    const verdict = v.ignored ? "IGNORED" : "NOT IGNORED";
+    div.innerHTML =
+      `<span class="${cls}" style="font-weight:700">${esc2(path)}</span>` +
+      `  →  <span class="${cls}" style="font-weight:700">${verdict}</span>`;
+    const pre = document.createElement("div");
+    pre.style.marginTop = "6px";
+    let s = "";
+    if (v.by){
+      s += `decided by <span class="rule">${esc2(v.by.text)}</span> at line ${v.by.line}\n`;
+    } else {
+      s += "no rule matched\n";
+    }
+    if (v.note) s += "\n" + esc2(v.note) + "\n";
+    s += "\n  order (last match wins):\n";
+    v.trail.forEach(h => {
+      if (!h.matched) return;
+      s += `  ✓  ${esc2(h.r.text.padEnd(22))} line ${h.r.line}\n`;
+    });
+    pre.innerHTML = s;
+    div.appendChild(pre);
+    out.appendChild(div);
+  });
+}
+
+function esc2(s){ return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+document.getElementById("run").addEventListener("click", render);
+render();
+</script>
+</body>
+</html>
